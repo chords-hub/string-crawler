@@ -8,7 +8,6 @@ import json
 class FireBaseHandler:
     def __init__(self):
         cred_json = json.loads(os.environ.get('GOOGLE_APPLICATION_CREDENTIALS_JSON'))
-        print(cred_json)
         cred = credentials.Certificate(cred_json)
         firebase_admin.initialize_app(cred)
         self.db = firestore.client()
