@@ -2,7 +2,7 @@
 FROM python:3.8-slim-buster
 
 # Create a non-root user and give it ownership of the /app directory
-RUN useradd -u 10014 -m myuser && chown -R myuser /app
+RUN useradd -u 10014 -m myuser && mkdir /app && chown -R myuser /app
 
 # Set the working directory in the container to /app
 WORKDIR /app
