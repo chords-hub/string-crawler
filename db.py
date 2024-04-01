@@ -46,7 +46,19 @@ class DatabaseHandler:
         query = "SELECT * FROM artists WHERE name = %s"
         result = self.execute_query(query, (artist_name,))
         if not result:
-            insert_query = "INSERT INTO artists (name) VALUES (%s)"
+            insert_query = "INSERT INTO artists (name) VALUES (%s) RETURNING id"
             self.cursor.execute(insert_query, (artist_name,))
             self.conn.commit()
+            return self.cursor.fetchone()[0]
+        else:
+            return result[0]['id']
+    
+    def add_song_if_not_exists(self, artist_id, song_title, firebase_id):
+        query = "SELECT * FROM songs WHERE artist_id = %s AND title = %s"
+        result = self.execute_query(query, (artist_id, song_title))
+        if not result:
+            insert_query = "INSERT INTO songs (artist_id, title, firebase_id) VALUES (%s, %s, %s)"
+            self.cursor.execute(insert_query, (artist_id, song_title, firebase_id))
+            self.conn.commit()
+        return result
 
