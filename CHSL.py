@@ -1,8 +1,11 @@
+from datetime import datetime
 import requests
 from bs4 import BeautifulSoup
 import re
+import json
 
 from db import DatabaseHandler
+from fireBase import FireBaseHandler
 
 class SongSection:
     def __init__(self, name):
@@ -11,6 +14,12 @@ class SongSection:
 
     def add_line(self, line_type, content):
         self.lines.append(({"type": line_type, "content": content}))
+    
+    def to_dict(self):
+        return {
+            'name': self.name,
+            'lines': self.lines
+        }
 
 def fetch_artists(url):
     # Fetch the content from the URL
@@ -93,20 +102,31 @@ def start(url):
     artists = fetch_artists(url)
     artists = artists[:3]
     db = DatabaseHandler()
+    firebase = FireBaseHandler()
     if not db.connect():
         return []
     
     for artist_name, artist_url in artists:
-        db.add_artist_if_not_exists(artist_name)
+        artist_id = db.add_artist_if_not_exists(artist_name)
         print(f"Fetching songs for artist: {artist_name}")
         songs = fetch_songs_from_artist_page(artist_url)
         for song_title, song_url in songs:
-            song_content = fetch_song_content(song_url)
+            song_sections = fetch_song_content(song_url)
             print(f"Artist: {artist_name}, Song: {song_title}, Song URL: {song_url}")
-            for content in song_content:
-                print(f"  {content.name}")
-                for line in content.lines:
-                    print(f"  {line['type']}: {line['content']}")
+            
+            song_content = []
+            for section in song_sections:
+                song_content.append(section.to_dict())
+            
+            song_id = firebase.addSong({
+                'artist': artist_name,
+                'title': song_title,
+                'url': song_url,
+                'content': song_content,
+                'created_date': datetime.now()
+            })
+            if song_id is not None:
+                db.add_song_if_not_exists(artist_id, song_title, song_id)            
     
     db.close()
 
