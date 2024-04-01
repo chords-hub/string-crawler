@@ -1,4 +1,5 @@
 from datetime import datetime
+import os
 import requests
 from bs4 import BeautifulSoup
 import re
@@ -100,7 +101,8 @@ def fetch_song_content(song_url):
 
 def start(url):
     artists = fetch_artists(url)
-    artists = artists[:3]
+    artist_count = int(os.getenv('ARTIST_COUNT', 5))
+    artists = artists[:artist_count]
     db = DatabaseHandler()
     firebase = FireBaseHandler()
     if not db.connect():
